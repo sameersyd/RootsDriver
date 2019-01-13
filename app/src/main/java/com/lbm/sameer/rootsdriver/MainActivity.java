@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,6 +16,11 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -30,6 +36,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        SharedPreferences prefs = getSharedPreferences(getString(R.string.shared_preference), MODE_PRIVATE);
+        final String restoredPass = prefs.getString("user_password", "");
+        final String restoredUserID = prefs.getString("user_id", "");
+
         logout = (Button)findViewById(R.id.main_logout);
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -42,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
                                 SharedPreferences.Editor editor = getSharedPreferences(
                                         getString(R.string.shared_preference), MODE_PRIVATE).edit();
                                 editor.putString("user_id","");
+                                editor.putString("user_password","");
                                 editor.putInt("login", 0);
                                 editor.apply();
                                 startActivity(new Intent(MainActivity.this,LoginActivity.class));
@@ -54,6 +65,34 @@ public class MainActivity extends AppCompatActivity {
         if(isServicesOK()){
             init();
         }
+
+        DocumentReference mDocRef = FirebaseFirestore.getInstance().document("drivers/"+restoredUserID);
+        mDocRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                if (documentSnapshot.exists()){
+                    if (!restoredPass.equals(documentSnapshot.getString("password"))){
+                        SharedPreferences.Editor editor = getSharedPreferences(
+                                getString(R.string.shared_preference), MODE_PRIVATE).edit();
+                        editor.putString("user_id","");
+                        editor.putString("user_password","");
+                        editor.putInt("login", 0);
+                        editor.apply();
+                        Toast.makeText(MainActivity.this, "Password Changed! Login Again", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(MainActivity.this,LoginActivity.class));
+                        finish();
+                    }
+                }else{
+                    Toast.makeText(MainActivity.this, "Username doesn't exists", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(MainActivity.this, e+"", Toast.LENGTH_SHORT).show();
+            }
+        });
+
     }
 
     private void init(){

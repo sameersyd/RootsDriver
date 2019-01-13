@@ -103,6 +103,7 @@ public class LoginActivity extends AppCompatActivity {
                         SharedPreferences.Editor editor = getSharedPreferences(
                                 getString(R.string.shared_preference), MODE_PRIVATE).edit();
                         editor.putString("user_id", username.getText().toString());
+                        editor.putString("user_password", password.getText().toString());
                         editor.putInt("login", 1);                      //stored 1 when user is logged in
                         editor.apply();
                         loadDialog.dismiss();
