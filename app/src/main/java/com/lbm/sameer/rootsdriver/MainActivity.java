@@ -83,7 +83,15 @@ public class MainActivity extends AppCompatActivity {
                         finish();
                     }
                 }else{
-                    Toast.makeText(MainActivity.this, "Username doesn't exists", Toast.LENGTH_SHORT).show();
+                    SharedPreferences.Editor editor = getSharedPreferences(
+                            getString(R.string.shared_preference), MODE_PRIVATE).edit();
+                    editor.putString("user_id","");
+                    editor.putString("user_password","");
+                    editor.putInt("login", 0);
+                    editor.apply();
+                    Toast.makeText(MainActivity.this, "Username Not Found! Login Again", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(MainActivity.this,LoginActivity.class));
+                    finish();
                 }
             }
         }).addOnFailureListener(new OnFailureListener() {
