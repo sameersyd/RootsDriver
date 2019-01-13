@@ -1,6 +1,10 @@
 package com.lbm.sameer.rootsdriver;
 
 import android.Manifest;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Geocoder;
 import android.location.Location;
@@ -15,9 +19,14 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -31,6 +40,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.common.collect.Maps;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -47,11 +57,51 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Marker marker;
     LocationListener locationListener;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
+    String userID;
+    Dialog loadDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        SharedPreferences prefs = getSharedPreferences(getString(R.string.shared_preference), MODE_PRIVATE);
+        userID = prefs.getString("user_id", null);
+
+        loadDialog = new Dialog(MapsActivity.this);
+        loadDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        loadDialog.setContentView(R.layout.loading_one);
+        loadDialog.setOnKeyListener(new Dialog.OnKeyListener() {
+
+            @Override
+            public boolean onKey(DialogInterface arg0, int keyCode,
+                                 KeyEvent event) {
+                // TODO Auto-generated method stub
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    new AlertDialog.Builder(MapsActivity.this).setIcon(android.R.drawable.alert_dark_frame).setTitle("Roots Foster")
+                            .setMessage("Stop updating location?")
+                            .setPositiveButton("Stop", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    finish();
+                                }
+                            }).setNegativeButton("No", null).show();
+                }
+                return true;
+            }
+        });
+        LottieAnimationView animSelect;
+        animSelect = (LottieAnimationView)loadDialog.findViewById(R.id.loading_one);
+        animSelect.setAnimation("radius.json");
+        animSelect.playAnimation();
+        animSelect.loop(true);
+
+        Window window = loadDialog.getWindow();
+        window.setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL);
+        window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+
+        loadDialog.show();
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -74,8 +124,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 locDB.put("latitude", latitude);
                 locDB.put("longitude", longitude);
 
-                db.collection("drivers").document("bus_id")
-                        .set(locDB)
+                db.collection("drivers").document(userID)
+                        .update(locDB)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {

@@ -24,19 +24,17 @@ dependencies {
 
     // Support multidex
     implementation 'com.android.support:multidex:1.0.3'
-    // Firebase Core
+    implementation 'com.airbnb.android:lottie:2.5.4'
+
+    //Firebase
     implementation 'com.google.firebase:firebase-core:16.0.1'
-    //Firebase Authentication
     implementation 'com.google.firebase:firebase-auth:16.0.2'
-    // Firestore Firestore
     implementation 'com.google.firebase:firebase-firestore:17.0.4'
 
     //Google Play Services for Maps
     implementation 'com.google.android.gms:play-services-maps:15.0.1'
-
     // Maps utils (required for custom markers)
     implementation 'com.google.maps.android:android-maps-utils:0.5+'
-
     // Google play services for location information
     implementation 'com.google.android.gms:play-services-location:15.0.1'
 
